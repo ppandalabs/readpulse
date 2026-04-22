@@ -1,65 +1,121 @@
-import Image from "next/image";
+"use client";
+import { useState } from "react";
 
 export default function Home() {
+  const [books, setBooks] = useState([
+    { id: 1, title: "Atomic Habits", author: "James Clear", pages: 320, read: 214 },
+    { id: 2, title: "Deep Work", author: "Cal Newport", pages: 296, read: 82 },
+  ]);
+
+  const [showForm, setShowForm] = useState(false);
+  const [newTitle, setNewTitle] = useState("");
+  const [newAuthor, setNewAuthor] = useState("");
+  const [newPages, setNewPages] = useState("");
+
+  function addBook() {
+    if (!newTitle || !newPages) return;
+    const book = {
+      id: books.length + 1,
+      title: newTitle,
+      author: newAuthor,
+      pages: parseInt(newPages),
+      read: 0,
+    };
+    setBooks([...books, book]);
+    setNewTitle("");
+    setNewAuthor("");
+    setNewPages("");
+    setShowForm(false);
+  }
+
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.js file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+    <main className="max-w-sm mx-auto px-4 py-6">
+
+      {/* Header */}
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-xl font-medium">
+          Read<span className="text-amber-500">Pulse</span>
+        </h1>
+        <span className="text-sm bg-amber-950 text-amber-400 px-3 py-1 rounded-full">
+          🔥 7 day streak
+        </span>
+      </div>
+
+      {/* Section Label */}
+      <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mb-3">
+        Currently Reading
+      </p>
+
+      {/* Book Cards */}
+      {books.map(book => (
+        <div key={book.id} className="border border-gray-800 rounded-xl p-4 mb-3 bg-gray-900">
+          <p className="font-medium text-sm text-white">{book.title}</p>
+          <p className="text-xs text-gray-500 mb-3">{book.author}</p>
+          <div className="h-1 bg-gray-800 rounded-full mb-2">
+            <div
+              className="h-1 bg-amber-500 rounded-full"
+              style={{ width: `${Math.round((book.read / book.pages) * 100)}%` }}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
+          </div>
+          <div className="flex justify-between text-xs">
+            <span className="text-amber-500 font-medium">
+              {Math.round((book.read / book.pages) * 100)}%
+            </span>
+            <span className="text-gray-500">{book.read}/{book.pages} pages</span>
+          </div>
         </div>
-      </main>
-    </div>
+      ))}
+
+      {/* Add Book Form */}
+      {showForm && (
+        <div className="border border-gray-800 rounded-xl p-4 mb-3 bg-gray-900">
+          <p className="text-sm font-medium text-white mb-3">New Book</p>
+          <input
+            type="text"
+            placeholder="Book title *"
+            value={newTitle}
+            onChange={e => setNewTitle(e.target.value)}
+            className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 mb-2 outline-none border border-gray-700 focus:border-amber-500"
+          />
+          <input
+            type="text"
+            placeholder="Author"
+            value={newAuthor}
+            onChange={e => setNewAuthor(e.target.value)}
+            className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 mb-2 outline-none border border-gray-700 focus:border-amber-500"
+          />
+          <input
+            type="number"
+            placeholder="Total pages *"
+            value={newPages}
+            onChange={e => setNewPages(e.target.value)}
+            className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 mb-3 outline-none border border-gray-700 focus:border-amber-500"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={addBook}
+              className="flex-1 py-2 rounded-lg bg-amber-500 text-black text-sm font-medium"
+            >
+              Add Book
+            </button>
+            <button
+              onClick={() => setShowForm(false)}
+              className="flex-1 py-2 rounded-lg border border-gray-700 text-gray-400 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Button */}
+      <button
+        onClick={() => setShowForm(true)}
+        className="w-full mt-2 py-3 rounded-xl border border-amber-800 text-amber-500 text-sm font-medium hover:bg-amber-950 transition-colors"
+      >
+        + Add a Book
+      </button>
+
+    </main>
   );
 }
