@@ -1,31 +1,56 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "../lib/supabase";
 
 export default function Home() {
-  const [books, setBooks] = useState([
-    { id: 1, title: "Atomic Habits", author: "James Clear", pages: 320, read: 214 },
-    { id: 2, title: "Deep Work", author: "Cal Newport", pages: 296, read: 82 },
-  ]);
-
+  const [books, setBooks] = useState([]);
   const [showForm, setShowForm] = useState(false);
   const [newTitle, setNewTitle] = useState("");
   const [newAuthor, setNewAuthor] = useState("");
   const [newPages, setNewPages] = useState("");
+  const [loading, setLoading] = useState(true);
 
-  function addBook() {
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
+  async function fetchBooks() {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from("books")
+      .select("*")
+      .order("created_at", { ascending: false });
+
+    if (error) {
+      console.error("Error fetching books:", error);
+    } else {
+      setBooks(data);
+    }
+    setLoading(false);
+  }
+
+  async function addBook() {
     if (!newTitle || !newPages) return;
-    const book = {
-      id: books.length + 1,
-      title: newTitle,
-      author: newAuthor,
-      pages: parseInt(newPages),
-      read: 0,
-    };
-    setBooks([...books, book]);
-    setNewTitle("");
-    setNewAuthor("");
-    setNewPages("");
-    setShowForm(false);
+
+    const { error } = await supabase
+      .from("books")
+      .insert([{
+        title: newTitle,
+        author: newAuthor,
+        pages: parseInt(newPages),
+        read: 0,
+        status: "reading",
+      }]);
+
+    if (error) {
+      console.error("Error adding book:", error);
+    } else {
+      setNewTitle("");
+      setNewAuthor("");
+      setNewPages("");
+      setShowForm(false);
+      fetchBooks();
+    }
   }
 
   return (
@@ -46,6 +71,20 @@ export default function Home() {
         Currently Reading
       </p>
 
+      {/* Loading State */}
+      {loading && (
+        <p className="text-gray-500 text-sm text-center py-8">
+          Loading your books...
+        </p>
+      )}
+
+      {/* Empty State */}
+      {!loading && books.length === 0 && (
+        <p className="text-gray-500 text-sm text-center py-8">
+          No books yet. Add your first one.
+        </p>
+      )}
+
       {/* Book Cards */}
       {books.map(book => (
         <div key={book.id} className="border border-gray-800 rounded-xl p-4 mb-3 bg-gray-900">
@@ -54,12 +93,12 @@ export default function Home() {
           <div className="h-1 bg-gray-800 rounded-full mb-2">
             <div
               className="h-1 bg-amber-500 rounded-full"
-              style={{ width: `${Math.round((book.read / book.pages) * 100)}%` }}
+              style={{ width: `${book.pages > 0 ? Math.round((book.read / book.pages) * 100) : 0}%` }}
             />
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-amber-500 font-medium">
-              {Math.round((book.read / book.pages) * 100)}%
+              {book.pages > 0 ? Math.round((book.read / book.pages) * 100) : 0}%
             </span>
             <span className="text-gray-500">{book.read}/{book.pages} pages</span>
           </div>
