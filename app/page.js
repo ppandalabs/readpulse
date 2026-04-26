@@ -11,6 +11,7 @@ export default function Home() {
   const [newAuthor, setNewAuthor] = useState("");
   const [newPages, setNewPages] = useState("");
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState(null);
 
   useEffect(() => {
     fetchBooks();
@@ -29,6 +30,10 @@ export default function Home() {
 
   async function addBook() {
     if (!newTitle || !newPages) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
     const { error } = await supabase
       .from("books")
       .insert([{
@@ -37,29 +42,44 @@ export default function Home() {
         pages: parseInt(newPages),
         read: 0,
         status: "reading",
+        user_id: userId,        // ← add this line
       }]);
+
     if (!error) {
       setNewTitle(""); setNewAuthor(""); setNewPages("");
       setShowForm(false); fetchBooks();
     }
   }
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+  }, []);
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    router.push("/auth");
+  }
 
   return (
     <main className="max-w-sm mx-auto px-4 py-6">
-        <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-medium">
           Read<span className="text-amber-500">Pulse</span>
         </h1>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
           <button
             onClick={() => router.push("/vocabulary")}
             className="text-sm text-amber-500 border border-amber-800 px-3 py-1 rounded-full hover:bg-amber-950 transition-colors"
           >
             📖 Words
           </button>
-          <span className="text-sm bg-amber-950 text-amber-400 px-3 py-1 rounded-full">
-            🔥 7 day streak
-          </span>
+          <button
+            onClick={signOut}
+            className="text-xs text-gray-500 hover:text-gray-300 transition-colors"
+          >
+            Sign out
+          </button>
         </div>
       </div>
 

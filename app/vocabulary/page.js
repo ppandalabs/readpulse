@@ -42,6 +42,9 @@ export default function Vocabulary() {
     if (!newWord.trim()) return;
     setSaving(true);
 
+    const { data: { session } } = await supabase.auth.getSession();
+    const userId = session?.user?.id;
+
     const dict = await fetchDictionary(newWord.trim());
 
     const { error } = await supabase
@@ -53,13 +56,12 @@ export default function Vocabulary() {
         synonyms: dict?.synonyms || [],
         antonyms: dict?.antonyms || [],
         ai_sentences: [],
+        user_id: userId,        // ← add this line
       }]);
 
     if (!error) {
-      setNewWord("");
-      setNewContext("");
-      setShowForm(false);
-      fetchWords();
+      setNewWord(""); setNewContext("");
+      setShowForm(false); fetchWords();
     }
     setSaving(false);
   }
@@ -108,13 +110,11 @@ export default function Vocabulary() {
       {words.length > 0 && (
         <div className="flex bg-gray-900 rounded-xl p-1 mb-6">
           <button onClick={() => setView("list")}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-              view === "list" ? "bg-amber-500 text-black" : "text-gray-400"}`}>
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${view === "list" ? "bg-amber-500 text-black" : "text-gray-400"}`}>
             List
           </button>
           <button onClick={() => { setView("flashcard"); setFlashIndex(0); setFlipped(false); }}
-            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${
-              view === "flashcard" ? "bg-amber-500 text-black" : "text-gray-400"}`}>
+            className={`flex-1 py-2 rounded-lg text-sm font-medium transition-colors ${view === "flashcard" ? "bg-amber-500 text-black" : "text-gray-400"}`}>
             Flashcards
           </button>
         </div>
