@@ -46,14 +46,21 @@ export default function Home() {
 
   return (
     <main className="max-w-sm mx-auto px-4 py-6">
-
-      <div className="flex justify-between items-center mb-6">
+        <div className="flex justify-between items-center mb-6">
         <h1 className="text-xl font-medium">
           Read<span className="text-amber-500">Pulse</span>
         </h1>
-        <span className="text-sm bg-amber-950 text-amber-400 px-3 py-1 rounded-full">
-          🔥 7 day streak
-        </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push("/vocabulary")}
+            className="text-sm text-amber-500 border border-amber-800 px-3 py-1 rounded-full hover:bg-amber-950 transition-colors"
+          >
+            📖 Words
+          </button>
+          <span className="text-sm bg-amber-950 text-amber-400 px-3 py-1 rounded-full">
+            🔥 7 day streak
+          </span>
+        </div>
       </div>
 
       <p className="text-xs font-medium text-gray-500 uppercase tracking-widest mb-3">
