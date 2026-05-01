@@ -89,6 +89,16 @@ export default function BookDetail() {
     setSavingNote(false);
   }
 
+  async function deleteNote(noteId) {
+    const confirmed = window.confirm("Delete this note?");
+    if (!confirmed) return;
+    const { error } = await supabase
+      .from("notes")
+      .delete()
+      .eq("id", noteId);
+    if (!error) fetchNotes();
+  }
+
   if (loading) return (
     <main className="max-w-sm mx-auto px-4 py-6">
       <p className="text-gray-500 text-sm">Loading book...</p>
@@ -230,30 +240,29 @@ export default function BookDetail() {
       )}
 
       {notes.map(n => (
-        <div key={n.id} className="border border-gray-800 rounded-xl p-4 mb-3 bg-gray-900">
+        <div key={n.id} className="border border-gray-800 rounded-xl p-4 mb-3 bg-gray-900 relative">
+
+          {/* Delete Note Button */}
+          <button
+            onClick={() => deleteNote(n.id)}
+            className="absolute top-3 right-3 text-gray-600 hover:text-red-400 transition-colors text-lg"
+          >
+            ×
+          </button>
 
           {n.chapter && (
             <span className="text-xs bg-amber-950 text-amber-400 px-2 py-1 rounded-full mb-3 inline-block">
               Chapter {n.chapter}
             </span>
           )}
-
-          <p className="text-sm font-medium text-white mb-2">{n.takeaway}</p>
-
-          {n.key_ideas && (
-            <p className="text-xs text-gray-400 mb-2">💡 {n.key_ideas}</p>
-          )}
-
-          {n.quote && (
-            <p className="text-xs text-gray-400 italic mb-2">"{n.quote}"</p>
-          )}
-
+          <p className="text-sm font-medium text-white mb-2 pr-6">{n.takeaway}</p>
+          {n.key_ideas && <p className="text-xs text-gray-400 mb-2">💡 {n.key_ideas}</p>}
+          {n.quote && <p className="text-xs text-gray-400 italic mb-2">"{n.quote}"</p>}
           {n.new_word && (
             <span className="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded-full">
               📖 {n.new_word}
             </span>
           )}
-
         </div>
       ))}
 

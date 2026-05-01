@@ -88,7 +88,15 @@ export default function Vocabulary() {
     }
     setGeneratingFor(null);
   }
-
+  async function deleteWord(wordId) {
+    const confirmed = window.confirm("Delete this word?");
+    if (!confirmed) return;
+    const { error } = await supabase
+      .from("vocabulary")
+      .delete()
+      .eq("id", wordId);
+    if (!error) fetchWords();
+  }
   const currentWord = words[flashIndex];
 
   return (
@@ -216,13 +224,18 @@ export default function Vocabulary() {
             <p className="text-gray-600 text-sm text-center py-8">No words yet.</p>
           )}
           {words.map(w => (
-            <div key={w.id} className="border border-gray-800 rounded-xl p-4 mb-3 bg-gray-900">
-              <p className="text-base font-medium text-white mb-1">{w.word}</p>
+            <div key={w.id} className="border border-gray-800 rounded-xl p-4 mb-3 bg-gray-900 relative">
 
-              {w.definition && (
-                <p className="text-xs text-gray-400 mb-2">{w.definition}</p>
-              )}
+              {/* Delete Word Button */}
+              <button
+                onClick={() => deleteWord(w.id)}
+                className="absolute top-3 right-3 text-gray-600 hover:text-red-400 transition-colors text-lg"
+              >
+                ×
+              </button>
 
+              <p className="text-base font-medium text-white mb-1 pr-6">{w.word}</p>
+              {w.definition && <p className="text-xs text-gray-400 mb-2">{w.definition}</p>}
               {w.synonyms?.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-2">
                   <span className="text-xs text-gray-600">≈</span>
@@ -231,11 +244,7 @@ export default function Vocabulary() {
                   ))}
                 </div>
               )}
-
-              {w.context && (
-                <p className="text-xs text-gray-500 italic mb-2">"{w.context}"</p>
-              )}
-
+              {w.context && <p className="text-xs text-gray-500 italic mb-2">"{w.context}"</p>}
               {w.ai_sentences?.length > 0 ? (
                 <div className="mt-2 border-t border-gray-800 pt-2">
                   <p className="text-xs text-amber-500 mb-1 font-medium">Use it like this:</p>

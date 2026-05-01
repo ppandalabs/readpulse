@@ -50,6 +50,18 @@ export default function Home() {
       setShowForm(false); fetchBooks();
     }
   }
+
+  async function deleteBook(bookId) {
+    const confirmed = window.confirm("Delete this book? All notes will be deleted too.");
+    if (!confirmed) return;
+
+    const { error } = await supabase
+      .from("books")
+      .delete()
+      .eq("id", bookId);
+
+    if (!error) fetchBooks();
+  }
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
@@ -95,22 +107,35 @@ export default function Home() {
       {books.map(book => (
         <div
           key={book.id}
-          onClick={() => router.push(`/books/${book.id}`)}
-          className="border border-gray-800 rounded-xl p-4 mb-3 bg-gray-900 cursor-pointer hover:border-amber-800 transition-colors"
+          className="border border-gray-800 rounded-xl p-4 mb-3 bg-gray-900 relative"
         >
-          <p className="font-medium text-sm text-white">{book.title}</p>
-          <p className="text-xs text-gray-500 mb-3">{book.author}</p>
-          <div className="h-1 bg-gray-800 rounded-full mb-2">
-            <div
-              className="h-1 bg-amber-500 rounded-full"
-              style={{ width: `${book.pages > 0 ? Math.round((book.read / book.pages) * 100) : 0}%` }}
-            />
-          </div>
-          <div className="flex justify-between text-xs">
-            <span className="text-amber-500 font-medium">
-              {book.pages > 0 ? Math.round((book.read / book.pages) * 100) : 0}%
-            </span>
-            <span className="text-gray-500">{book.read}/{book.pages} pages</span>
+          {/* Delete Button */}
+          <button
+            onClick={e => { e.stopPropagation(); deleteBook(book.id); }}
+            className="absolute top-3 right-3 text-gray-600 hover:text-red-400 transition-colors text-lg"
+          >
+            ×
+          </button>
+
+          {/* Card Content — make clickable */}
+          <div
+            onClick={() => router.push(`/books/${book.id}`)}
+            className="cursor-pointer"
+          >
+            <p className="font-medium text-sm text-white pr-6">{book.title}</p>
+            <p className="text-xs text-gray-500 mb-3">{book.author}</p>
+            <div className="h-1 bg-gray-800 rounded-full mb-2">
+              <div
+                className="h-1 bg-amber-500 rounded-full"
+                style={{ width: `${book.pages > 0 ? Math.round((book.read / book.pages) * 100) : 0}%` }}
+              />
+            </div>
+            <div className="flex justify-between text-xs">
+              <span className="text-amber-500 font-medium">
+                {book.pages > 0 ? Math.round((book.read / book.pages) * 100) : 0}%
+              </span>
+              <span className="text-gray-500">{book.read}/{book.pages} pages</span>
+            </div>
           </div>
         </div>
       ))}
