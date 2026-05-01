@@ -14,6 +14,8 @@ export default function BookDetail() {
   const [saved, setSaved] = useState(false);
   const [showNoteForm, setShowNoteForm] = useState(false);
   const [savingNote, setSavingNote] = useState(false);
+  const [quoteImage, setQuoteImage] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const [note, setNote] = useState({
     chapter: "",
@@ -71,6 +73,26 @@ export default function BookDetail() {
   async function saveNote() {
     if (!note.takeaway) return;
     setSavingNote(true);
+
+    let quoteImageUrl = null;
+
+    // Upload image if selected
+    if (quoteImage) {
+      setUploadingImage(true);
+      const fileName = `${params.id}/${Date.now()}-${quoteImage.name}`;
+      const { data, error: uploadError } = await supabase.storage
+        .from("quote-images")
+        .upload(fileName, quoteImage);
+
+      if (!uploadError) {
+        const { data: urlData } = supabase.storage
+          .from("quote-images")
+          .getPublicUrl(fileName);
+        quoteImageUrl = urlData.publicUrl;
+      }
+      setUploadingImage(false);
+    }
+
     const { error } = await supabase
       .from("notes")
       .insert([{
@@ -79,10 +101,13 @@ export default function BookDetail() {
         takeaway: note.takeaway,
         key_ideas: note.key_ideas || null,
         quote: note.quote || null,
+        quote_image_url: quoteImageUrl,
         new_word: note.new_word || null,
       }]);
+
     if (!error) {
       setNote({ chapter: "", takeaway: "", key_ideas: "", quote: "", new_word: "" });
+      setQuoteImage(null);
       setShowNoteForm(false);
       fetchNotes();
     }
@@ -213,7 +238,30 @@ export default function BookDetail() {
             onChange={e => setNote({ ...note, quote: e.target.value })}
             className="w-full bg-gray-800 text-white text-sm rounded-lg px-3 py-2 mb-3 outline-none border border-gray-700 focus:border-amber-500"
           />
-
+          {/* Quote Image Upload */}
+          <div className="mb-3">
+            <p className="text-xs text-gray-500 mb-2">Or upload quote image</p>
+            <label className="block w-full border border-dashed border-gray-700 rounded-lg p-3 text-center cursor-pointer hover:border-amber-700 transition-colors">
+              <input
+                type="file"
+                accept="image/*"
+                onChange={e => setQuoteImage(e.target.files[0])}
+                className="hidden"
+              />
+              {quoteImage ? (
+                <span className="text-xs text-amber-500">{quoteImage.name}</span>
+              ) : (
+                <span className="text-xs text-gray-600">📷 Tap to upload image</span>
+              )}
+            </label>
+            {quoteImage && (
+              <img
+                src={URL.createObjectURL(quoteImage)}
+                alt="Quote preview"
+                className="mt-2 rounded-lg w-full object-cover max-h-40"
+              />
+            )}
+          </div>
           <input
             type="text"
             placeholder="New word learned"
@@ -258,6 +306,14 @@ export default function BookDetail() {
           <p className="text-sm font-medium text-white mb-2 pr-6">{n.takeaway}</p>
           {n.key_ideas && <p className="text-xs text-gray-400 mb-2">💡 {n.key_ideas}</p>}
           {n.quote && <p className="text-xs text-gray-400 italic mb-2">"{n.quote}"</p>}
+          {n.quote_image_url && (
+            <img
+              src={n.quote_image_url}
+              alt="Quote"
+              className="mt-2 rounded-lg w-full object-cover max-h-48 cursor-pointer"
+              onClick={() => window.open(n.quote_image_url, '_blank')}
+            />
+          )}
           {n.new_word && (
             <span className="text-xs bg-gray-800 text-gray-400 px-2 py-1 rounded-full">
               📖 {n.new_word}
